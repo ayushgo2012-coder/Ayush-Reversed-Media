@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Rewind Magic - Professional Reverse Video Studio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+        
+        :root {
+            --brand-primary: #6366f1;
+            --brand-secondary: #0ea5e9;
+            --bg-dark: #020617;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-dark);
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .gradient-mesh {
+            background-color: #020617;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(14, 165, 233, 0.1) 0px, transparent 50%);
+        }
+
+        .glass {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .record-pulse {
+            animation: pulse-red 1.5s infinite;
+        }
+
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+
+        .countdown-animate {
+            animation: bounceIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0); opacity: 0; }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .mirror-view { transform: scaleX(-1); }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+    </style>
+</head>
+<body class="gradient-mesh min-h-screen text-slate-100 selection:bg-indigo-500/30">
+
+    <div class="max-w-5xl mx-auto px-4 py-6 md:py-12 flex flex-col min-h-screen">
+        <!-- Header -->
+        <header class="flex flex-col items-center mb-8 text-center">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 mb-4">
+                <span class="relative flex h-2 w-2">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+                </span>
+                <span class="text-[10px] font-bold uppercase tracking-[0.2em] text-indigo-400">Pro Studio v3.2 • Ultra Smooth</span>
+            </div>
+            <h1 class="text-5xl md:text-7xl font-extrabold tracking-tighter mb-2 italic">
+                REWIND<span class="text-transparent bg-clip-text bg-gradient-to-tr from-indigo-400 to-cyan-400">MAGIC</span>
+            </h1>
+            <p class="text-slate-400 max-w-md mx-auto text-sm md:text-base font-medium">
+                Cinematic reverse motion with buttery-smooth 60fps processing.
+            </p>
+        </header>
+
+        <!-- Main Workspace -->
+        <div class="flex-grow flex flex-col gap-6">
+            <!-- Viewport Area -->
+            <section class="relative aspect-video md:aspect-[21/9] w-full rounded-[2rem] overflow-hidden shadow-2xl glass border-white/5 ring-1 ring-white/10 bg-black/40">
+                
+                <!-- Setup Overlay -->
+                <div id="setupOverlay" class="absolute inset-0 z-50 flex flex-col items-center justify-center p-8">
+                    <button id="enableCamBtn" class="bg-indigo-600 hover:bg-indigo-500 text-white px-10 py-4 rounded-2xl font-bold transition-all shadow-lg shadow-indigo-600/20 active:scale-95">
+                        Open Studio Camera
+                    </button>
+                </div>
+
+                <!-- Video Elements -->
+                <video id="preview" autoplay muted playsinline class="hidden w-full h-full object-cover mirror-view"></video>
+                <video id="recording" controls class="hidden w-full h-full object-cover bg-black"></video>
+
+                <!-- HUDs -->
+                <div id="recordingIndicator" class="hidden absolute top-6 left-6 z-40 flex items-center gap-3 px-4 py-2 bg-black/60 backdrop-blur-md rounded-full border border-white/10">
+                    <div class="w-2.5 h-2.5 bg-red-500 rounded-full record-pulse"></div>
+                    <span id="recTimer" class="text-xs font-mono text-white">00:00</span>
+                </div>
+
+                <div id="countdownOverlay" class="hidden absolute inset-0 z-40 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+                    <span id="countdownText" class="text-[12rem] font-black text-white countdown-animate">3</span>
+                </div>
+
+                <div id="processingOverlay" class="hidden absolute inset-0 z-50 flex flex-col items-center justify-center p-8 bg-slate-950/95">
+                    <div class="relative mb-6">
+                        <div class="w-20 h-20 border-4 border-indigo-500/20 rounded-full"></div>
+                        <div class="absolute inset-0 w-20 h-20 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                    <h4 class="text-xl font-black uppercase tracking-widest mb-2">Smoothing Timeline</h4>
+                    <div class="w-64 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                        <div id="progressBar" class="h-full bg-indigo-500 transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                    <p id="percentText" class="mt-4 text-xs font-mono text-slate-500">0%</p>
+                </div>
+            </section>
+
+            <!-- Interface -->
+            <div id="interface" class="hidden space-y-8">
+                <div class="flex flex-wrap items-center justify-center gap-4">
+                    <!-- Speed Control -->
+                    <div class="flex items-center gap-3 px-4 py-2 bg-slate-800/50 rounded-2xl border border-white/5">
+                        <span class="text-[10px] font-black text-indigo-400 uppercase">Tempo</span>
+                        <select id="speedSelect" class="bg-transparent text-xs font-bold outline-none cursor-pointer text-slate-200">
+                            <option value="0.25" class="bg-slate-900">0.25x Super Slow</option>
+                            <option value="0.5" class="bg-slate-900" selected>0.50x Smooth Slow</option>
+                            <option value="1.0" class="bg-slate-900">1.00x Normal</option>
+                        </select>
+                    </div>
+
+                    <!-- Look -->
+                    <div class="flex items-center gap-3 px-4 py-2 bg-slate-800/50 rounded-2xl border border-white/5">
+                        <span class="text-[10px] font-black text-slate-500 uppercase">Look</span>
+                        <select id="filterSelect" class="bg-transparent text-xs font-bold outline-none cursor-pointer text-slate-200">
+                            <option value="none" class="bg-slate-900">Cinematic</option>
+                            <option value="grayscale(100%)" class="bg-slate-900">Noir</option>
+                            <option value="sepia(60%)" class="bg-slate-900">Vintage</option>
+                        </select>
+                    </div>
+
+                    <!-- Flip Cam -->
+                    <button id="flipBtn" class="p-3 bg-slate-800/50 hover:bg-slate-700/50 rounded-2xl border border-white/5 transition-all" title="Switch Camera">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Main Buttons -->
+                <div class="flex justify-center gap-4">
+                    <button id="startBtn" class="px-12 py-5 bg-indigo-600 hover:bg-indigo-500 rounded-3xl font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95 shadow-xl shadow-indigo-600/20">
+                        Capture Magic
+                    </button>
+                    <button id="stopBtn" class="hidden px-12 py-5 bg-rose-600 hover:bg-rose-500 rounded-3xl font-black uppercase tracking-widest transition-all active:scale-95">
+                        Stop
+                    </button>
+                    <div id="resultBtns" class="hidden flex gap-4">
+                        <button id="redoBtn" class="px-8 py-5 bg-slate-800 hover:bg-slate-700 rounded-3xl font-black uppercase tracking-widest transition-all">
+                            Redo
+                        </button>
+                        <a id="downloadBtn" class="px-8 py-5 bg-emerald-600 hover:bg-emerald-500 rounded-3xl font-black uppercase tracking-widest transition-all flex items-center gap-2">
+                            Save Magic
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="mt-auto pt-12 text-center">
+            <p class="text-slate-600 text-[10px] uppercase tracking-widest font-bold">Processed locally • 60FPS Internal Buffer</p>
+        </footer>
+    </div>
+
+    <canvas id="procCanvas" class="hidden"></canvas>
+
+    <script>
+        const preview = document.getElementById('preview');
+        const recording = document.getElementById('recording');
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const redoBtn = document.getElementById('redoBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const resultBtns = document.getElementById('resultBtns');
+        const canvas = document.getElementById('procCanvas');
+        const ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });
+        
+        let stream, mediaRecorder, frames = [], isRecording = false;
+        let currentFacingMode = 'user';
+
+        async function initCamera() {
+            if (stream) stream.getTracks().forEach(t => t.stop());
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: { 
+                        facingMode: currentFacingMode,
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 },
+                        frameRate: { ideal: 60 }
+                    }
+                });
+                preview.srcObject = stream;
+                preview.classList.remove('hidden');
+                document.getElementById('setupOverlay').classList.add('hidden');
+                document.getElementById('interface').classList.remove('hidden');
+            } catch (e) { console.error(e); }
+        }
+
+        document.getElementById('enableCamBtn').onclick = initCamera;
+        document.getElementById('flipBtn').onclick = () => {
+            currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
+            preview.classList.toggle('mirror-view', currentFacingMode === 'user');
+            initCamera();
+        };
+
+        startBtn.onclick = () => {
+            let count = 3;
+            const overlay = document.getElementById('countdownOverlay');
+            const text = document.getElementById('countdownText');
+            overlay.classList.remove('hidden');
+            
+            const timer = setInterval(() => {
+                count--;
+                if (count > 0) text.innerText = count;
+                else {
+                    clearInterval(timer);
+                    overlay.classList.add('hidden');
+                    startCapture();
+                }
+            }, 800);
+        };
+
+        function startCapture() {
+            frames = [];
+            isRecording = true;
+            startBtn.classList.add('hidden');
+            stopBtn.classList.remove('hidden');
+            document.getElementById('recordingIndicator').classList.remove('hidden');
+            
+            canvas.width = preview.videoWidth;
+            canvas.height = preview.videoHeight;
+            
+            const startTime = Date.now();
+            
+            function loop() {
+                if (!isRecording) return;
+                
+                // Draw to hidden canvas to grab frame
+                ctx.save();
+                if (currentFacingMode === 'user') {
+                    ctx.translate(canvas.width, 0);
+                    ctx.scale(-1, 1);
+                }
+                ctx.drawImage(preview, 0, 0);
+                ctx.restore();
+                
+                // Use higher quality WebP for smoothness
+                frames.push(canvas.toDataURL('image/webp', 0.8));
+                
+                const diff = Math.floor((Date.now() - startTime) / 1000);
+                document.getElementById('recTimer').innerText = `00:${diff.toString().padStart(2, '0')}`;
+                
+                requestAnimationFrame(loop);
+            }
+            requestAnimationFrame(loop);
+        }
+
+        stopBtn.onclick = async () => {
+            isRecording = false;
+            stopBtn.classList.add('hidden');
+            document.getElementById('recordingIndicator').classList.add('hidden');
+            document.getElementById('processingOverlay').classList.remove('hidden');
+            
+            await processReverse();
+        };
+
+        async function processReverse() {
+            const speed = parseFloat(document.getElementById('speedSelect').value);
+            const reversed = [...frames].reverse();
+            const chunks = [];
+            
+            // Internal capture stream at 60fps for maximum smoothness
+            const stream = canvas.captureStream(60);
+            const recorder = new MediaRecorder(stream, { 
+                mimeType: 'video/webm;codecs=vp9',
+                videoBitsPerSecond: 8000000 
+            });
+            
+            recorder.ondataavailable = e => chunks.push(e.data);
+            recorder.onstop = () => {
+                const blob = new Blob(chunks, { type: 'video/webm' });
+                const url = URL.createObjectURL(blob);
+                recording.src = url;
+                recording.classList.remove('hidden');
+                preview.classList.add('hidden');
+                downloadBtn.href = url;
+                downloadBtn.download = `magic_reverse_${Date.now()}.webm`;
+                
+                document.getElementById('processingOverlay').classList.add('hidden');
+                resultBtns.classList.remove('hidden');
+            };
+
+            recorder.start();
+            ctx.filter = document.getElementById('filterSelect').value;
+
+            // Smooth interpolation playback
+            for(let i=0; i < reversed.length; i++) {
+                const img = await new Promise(res => {
+                    const image = new Image();
+                    image.onload = () => res(image);
+                    image.src = reversed[i];
+                });
+                
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0);
+                
+                const p = Math.floor((i / reversed.length) * 100);
+                document.getElementById('progressBar').style.width = `${p}%`;
+                document.getElementById('percentText').innerText = `${p}%`;
+                
+                // Slow down the processing loop to match speed
+                // 16ms is ~60fps. Adjusting by 1/speed creates the slow mo effect
+                await new Promise(r => setTimeout(r, 16 / speed));
+            }
+
+            recorder.stop();
+        }
+
+        redoBtn.onclick = () => {
+            recording.classList.add('hidden');
+            preview.classList.remove('hidden');
+            resultBtns.classList.add('hidden');
+            startBtn.classList.remove('hidden');
+            document.getElementById('progressBar').style.width = '0%';
+        };
+    </script>
+</body>
+</html>
